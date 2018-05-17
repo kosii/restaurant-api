@@ -43,7 +43,7 @@ package object restaurants {
         } ~ put {
           entity(as[RestaurantFactory]) { restaurantFactory =>
             val restaurant = restaurantFactory(restaurantID)
-            complete(restaurantRepositoryComponent.updateRestaurant(restaurant).map(_ => StatusCodes.NoContent))
+            complete(restaurantRepositoryComponent.updateOrCreateRestaurant(restaurant).map(_ => StatusCodes.NoContent))
           }
         } ~ delete {
           complete(

@@ -10,20 +10,26 @@ import scala.concurrent.{ExecutionContext, Future}
 package object restaurants {
 
   /**
-    * The component responsible for the storage subsystem.
+    * The component responsible for the storage
     */
   trait RestaurantRepositoryComponent {
     /**
-      * @return The complete list of the Restaurant stored with the actual implementation
+      * @return The complete list of the Restaurant stored within the actual implementation
       */
     def getRestaurants: Future[List[Restaurant]]
 
     /**
-      * Return the restaurant defined by it's id
+      * Return the restaurant defined by its id
       * @param uuid The id of the restaurant to return
-      * @return
+      * @return None, if there is no restaurant with the given id, or Some[Restaurant] otherwise
       */
     def getRestaurant(uuid: UUID): Future[Option[Restaurant]]
+
+    /**
+      * Create a new restaurant by assigning an ID to it
+      * @param restaurantFactory a function of UUID => Restaurant
+      * @return The restaurant created
+      */
     def createRestaurant(restaurantFactory: RestaurantFactory): Future[Restaurant]
 
     /**
@@ -32,15 +38,17 @@ package object restaurants {
       * @return The
       */
     def deleteRestaurant(uuid: UUID): Future[Option[Restaurant]]
-    def updateRestaurant(restaurant: Restaurant): Future[Unit]
+
+    /**
+      * Replace or create a restaurant, depending if there is already a restaurant with `restaurant.id`
+      * @param restaurant
+      * @return
+      */
+    def updateOrCreateRestaurant(restaurant: Restaurant): Future[Unit]
   }
 
   class AsyncInmemoryRestaurantRepositoryComponent extends RestaurantRepositoryComponent {
-    var restaurants: Map[UUID, Restaurant] = Map(
-      UUID.fromString("a4fc27ac-beaa-4ece-97b0-349b43127475") -> Restaurant(UUID.fromString("a4fc27ac-beaa-4ece-97b0-349b43127475"), "1", "", Nil, "", ""),
-      UUID.fromString("a45c24fe-488d-44ce-af38-debca5eeba90") -> Restaurant(UUID.fromString("a45c24fe-488d-44ce-af38-debca5eeba90"), "2", "", Nil, "", ""),
-      UUID.fromString("22acd04d-48c3-4bf9-830e-4d095f5b1613") -> Restaurant(UUID.fromString("22acd04d-48c3-4bf9-830e-4d095f5b1613"), "3", "", Nil, "", "")
-    )
+    var restaurants: Map[UUID, Restaurant] = Map()
 
     override def getRestaurants: Future[List[Restaurant]] = Future.successful(restaurants.values.toList)
     override def getRestaurant(uuid: UUID): Future[Option[Restaurant]] = Future.successful(restaurants.get(uuid))
@@ -55,12 +63,12 @@ package object restaurants {
       restaurants -= uuid
       res
     }
-    override def updateRestaurant(restaurant: Restaurant): Future[Unit] = Future.successful {
+    override def updateOrCreateRestaurant(restaurant: Restaurant): Future[Unit] = Future.successful {
       restaurants += (restaurant.id -> restaurant)
     }
   }
 
-  class LevelDbRestaurantRepositoryComponent(implicit ec: ExecutionContext, s: Serialization[Restaurant]) extends RestaurantRepositoryComponent {
+  class LevelDbRestaurantRepositoryComponent(dbName: String)(implicit ec: ExecutionContext, s: Serialization[Restaurant]) extends RestaurantRepositoryComponent {
     import java.io._
 
     import org.fusesource.leveldbjni.JniDBFactory._
@@ -68,7 +76,7 @@ package object restaurants {
 
     val options = new Options
     options.createIfMissing(true)
-    val db: DB = factory.open(new File("restaurants"), options)
+    val db: DB = factory.open(new File(dbName), options)
 
     override def getRestaurants: Future[List[Restaurant]] = Future {
       val iterator = db.iterator()
@@ -95,11 +103,12 @@ package object restaurants {
     override def deleteRestaurant(uuid: UUID): Future[Option[Restaurant]] = for {
         restaurant <- getRestaurant(uuid)
       } yield {
+        // delete only if there is a restaurant with a given ID
         restaurant.foreach(_ => db.delete(bytes(uuid.toString)))
         restaurant
       }
 
-    override def updateRestaurant(restaurant: Restaurant): Future[Unit] = Future {
+    override def updateOrCreateRestaurant(restaurant: Restaurant): Future[Unit] = Future {
       db.put(bytes(restaurant.id.toString), s.serialize(restaurant))
     }
   }

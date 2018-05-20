@@ -47,8 +47,8 @@ package object restaurants {
     def updateOrCreateRestaurant(restaurant: Restaurant): Future[Unit]
   }
 
-  class AsyncInmemoryRestaurantRepositoryComponent extends RestaurantRepositoryComponent {
-    var restaurants: Map[UUID, Restaurant] = Map()
+  class AsyncInmemoryRestaurantRepositoryComponent(var restaurants: Map[UUID, Restaurant] = Map()) extends RestaurantRepositoryComponent {
+//    var restaurants: Map[UUID, Restaurant] = Map()
 
     override def getRestaurants: Future[List[Restaurant]] = Future.successful(restaurants.values.toList)
     override def getRestaurant(uuid: UUID): Future[Option[Restaurant]] = Future.successful(restaurants.get(uuid))

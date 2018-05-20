@@ -21,11 +21,12 @@ package object restaurants {
         get {
           complete(restaurantRepositoryComponent.getRestaurants)
         } ~ post {
-          extractUri { uri =>
-            entity(as[RestaurantFactory]) { restaurantFactory =>
+          extractMatchedPath {
+            path =>
+              entity(as[RestaurantFactory]) { restaurantFactory =>
               val restaurantFuture = restaurantRepositoryComponent.createRestaurant(restaurantFactory)
               complete(restaurantFuture.map { restaurant =>
-                (StatusCodes.Created, List(Location(Uri(uri + "/" + restaurant.id))), HttpEntity.Empty)
+                (StatusCodes.Created, List(Location(Uri.from(path = (path / restaurant.id.toString).toString()))), HttpEntity.Empty)
               })
             }
           }

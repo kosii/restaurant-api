@@ -2,13 +2,14 @@ package com.deliveryhero.restaurants
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import com.deliveryhero.restaurants.repositories.LevelDbRestaurantRepositoryComponent
-import org.iq80.leveldb.{DB, Options}
+import org.iq80.leveldb.Options
 
-import scala.concurrent.Future
 import scala.io.StdIn
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
 
 object Main extends App {
   implicit val system = ActorSystem("server")
@@ -22,7 +23,12 @@ object Main extends App {
   val db = factory.open(new java.io.File("restaurants"), options)
 
   val res = for {
-    binding         <-  Http().bindAndHandle(routeBuilder(new LevelDbRestaurantRepositoryComponent(db)), "localhost", 8080)
+    binding         <-  Http().bindAndHandle(
+      routeBuilder(new LevelDbRestaurantRepositoryComponent(db)) ~ path("v1" / "healthcheck") {
+        get {
+          complete(StatusCodes.OK)
+        }
+      }, "localhost", 8080)
     _               =   println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
     _               =   StdIn.readLine()
     done            <-  binding.unbind()

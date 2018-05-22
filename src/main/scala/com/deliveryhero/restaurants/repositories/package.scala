@@ -47,26 +47,7 @@ package object repositories {
       */
     def updateOrCreateRestaurant(restaurant: Restaurant): Future[Unit]
   }
-
-  class AsyncInmemoryRestaurantRepositoryComponent(var restaurants: Map[UUID, Restaurant] = Map()) extends RestaurantRepositoryComponent {
-    override def getRestaurants: Future[List[Restaurant]] = Future.successful(restaurants.values.toList)
-    override def getRestaurant(uuid: UUID): Future[Option[Restaurant]] = Future.successful(restaurants.get(uuid))
-    override def createRestaurant(restaurantFactory: RestaurantFactory): Future[Restaurant] = Future.successful {
-      val uuid = UUID.randomUUID()
-      val restaurant = restaurantFactory(uuid)
-      restaurants += (uuid -> restaurant)
-      restaurant
-    }
-    override def deleteRestaurant(uuid: UUID): Future[Option[Restaurant]] = Future.successful {
-      val res = restaurants.get(uuid)
-      restaurants -= uuid
-      res
-    }
-    override def updateOrCreateRestaurant(restaurant: Restaurant): Future[Unit] = Future.successful {
-      restaurants += (restaurant.id -> restaurant)
-    }
-  }
-
+  
   class LevelDbRestaurantRepositoryComponent(db: DB)(implicit ec: ExecutionContext, s: Serialization[Restaurant]) extends RestaurantRepositoryComponent {
     import org.fusesource.leveldbjni.JniDBFactory.bytes
 

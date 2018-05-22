@@ -14,7 +14,7 @@ package object models {
 
   trait Serialization[T] {
     def serialize(o: T): Array[Byte]
-    def deserialize(bytes: Array[Byte]): Option[T]
+    def deserialize(bytes: Array[Byte]): T
   }
 
   implicit def avroDeserializer[T: SchemaFor : ToRecord : FromRecord]: Serialization[T] = new Serialization[T] {
@@ -26,11 +26,11 @@ package object models {
       baos.toByteArray
     }
 
-    override def deserialize(bytes: Array[Byte]): Option[T] = {
+    override def deserialize(bytes: Array[Byte]): T = {
       val in = new ByteArrayInputStream(bytes)
       val input = AvroInputStream.binary[T](in)
       val result = input.iterator.toSeq
-      result.headOption
+      result.head
     }
   }
 }

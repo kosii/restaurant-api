@@ -10,8 +10,6 @@ class SerializationSpecs extends FlatSpec with Matchers {
 
     val ev = implicitly[Serialization[Restaurant]]
 
-    ev.deserialize(ev.serialize(restaurant)) should matchPattern {
-      case Some(`restaurant`) =>
-    }
+    ev.deserialize(ev.serialize(restaurant)) should be (restaurant)
   }
 }

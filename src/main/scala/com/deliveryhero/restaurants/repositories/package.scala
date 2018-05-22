@@ -1,13 +1,14 @@
-package com.deliveryhero.restaurants.repositories
+package com.deliveryhero.restaurants
 
 import java.util.UUID
 
 import com.deliveryhero.restaurants.models.Restaurant.RestaurantFactory
 import com.deliveryhero.restaurants.models.{Restaurant, Serialization}
+import org.iq80.leveldb.DB
 
 import scala.concurrent.{ExecutionContext, Future}
 
-package object restaurants {
+package object repositories {
 
   /**
     * The component responsible for the storage
@@ -48,8 +49,6 @@ package object restaurants {
   }
 
   class AsyncInmemoryRestaurantRepositoryComponent(var restaurants: Map[UUID, Restaurant] = Map()) extends RestaurantRepositoryComponent {
-//    var restaurants: Map[UUID, Restaurant] = Map()
-
     override def getRestaurants: Future[List[Restaurant]] = Future.successful(restaurants.values.toList)
     override def getRestaurant(uuid: UUID): Future[Option[Restaurant]] = Future.successful(restaurants.get(uuid))
     override def createRestaurant(restaurantFactory: RestaurantFactory): Future[Restaurant] = Future.successful {
@@ -68,29 +67,24 @@ package object restaurants {
     }
   }
 
-  class LevelDbRestaurantRepositoryComponent(dbName: String)(implicit ec: ExecutionContext, s: Serialization[Restaurant]) extends RestaurantRepositoryComponent {
-    import java.io._
-
-    import org.fusesource.leveldbjni.JniDBFactory._
-    import org.iq80.leveldb.{DB, _}
-
-    val options = new Options
-    options.createIfMissing(true)
-    val db: DB = factory.open(new File(dbName), options)
+  class LevelDbRestaurantRepositoryComponent(db: DB)(implicit ec: ExecutionContext, s: Serialization[Restaurant]) extends RestaurantRepositoryComponent {
+    import org.fusesource.leveldbjni.JniDBFactory.bytes
 
     override def getRestaurants: Future[List[Restaurant]] = Future {
       val iterator = db.iterator()
       iterator.seekToFirst()
-      var list = List[Option[Restaurant]]()
+      var list = List[Restaurant]()
       while (iterator.hasNext) {
         val next = iterator.next()
         list :+= s.deserialize(next.getValue)
       }
-      list.flatten
+      list
     }
 
     override def getRestaurant(uuid: UUID): Future[Option[Restaurant]] = Future {
-      s.deserialize(db.get(bytes(uuid.toString)))
+      // db.get returns null, if the key is not present...
+      val res = Option { db.get(bytes(uuid.toString)) }
+      res.map(s.deserialize)
     }
 
     override def createRestaurant(restaurantFactory: RestaurantFactory): Future[Restaurant] = Future {

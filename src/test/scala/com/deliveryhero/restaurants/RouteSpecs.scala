@@ -7,7 +7,7 @@ import akka.http.scaladsl.server.{MalformedRequestContentRejection, RequestEntit
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.deliveryhero.restaurants.models.Restaurant
 import com.deliveryhero.restaurants.models.Restaurant.RestaurantFactory
-import com.deliveryhero.restaurants.repositories.restaurants.RestaurantRepositoryComponent
+import com.deliveryhero.restaurants.repositories.RestaurantRepositoryComponent
 import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
@@ -194,6 +194,40 @@ class RouteSpecs extends FlatSpec with Matchers with ScalatestRouteTest {
   }
 
   "DELETE on a given restaurant's url" should "return NotFound for non-existing restaurant" in {
-    
+    val mockedRepositoryComponent = mock(classOf[RestaurantRepositoryComponent])
+    val uuid = UUID.randomUUID()
+    val restaurant = Restaurant(uuid, "", "", Nil, "", "")
+    val routeWithMockedReposityComponent = routeBuilder(mockedRepositoryComponent)
+
+    when(mockedRepositoryComponent.deleteRestaurant(any[UUID])).thenAnswer((invocation: InvocationOnMock) => Future.successful {
+      if (invocation.getArgument(0).asInstanceOf[UUID].equals(uuid)) {
+        Some(restaurant)
+      } else {
+        None
+      }
+    })
+
+    Delete(s"/restaurants/${UUID.randomUUID()}") ~> routeWithMockedReposityComponent ~> check {
+      status should be (StatusCodes.NotFound)
+    }
+  }
+
+  it should "return NoContent when successfully deleted a restaurant" in {
+    val mockedRepositoryComponent = mock(classOf[RestaurantRepositoryComponent])
+    val uuid = UUID.randomUUID()
+    val restaurant = Restaurant(uuid, "", "", Nil, "", "")
+    val routeWithMockedReposityComponent = routeBuilder(mockedRepositoryComponent)
+
+    when(mockedRepositoryComponent.deleteRestaurant(any[UUID])).thenAnswer((invocation: InvocationOnMock) => Future.successful {
+      if (invocation.getArgument(0).asInstanceOf[UUID].equals(uuid)) {
+        Some(restaurant)
+      } else {
+        None
+      }
+    })
+
+    Delete(s"/restaurants/$uuid") ~> routeWithMockedReposityComponent ~> check {
+      status should be (StatusCodes.NoContent)
+    }
   }
 }

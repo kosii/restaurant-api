@@ -36,18 +36,18 @@ package object repositories {
     /**
       * Delete the restaurant defined by it's id
       * @param uuid The id of the restaurant to be deleted
-      * @return The
+      * @return The restaurant associated with the uuid, if any.
       */
     def deleteRestaurant(uuid: UUID): Future[Option[Restaurant]]
 
     /**
       * Replace or create a restaurant, depending if there is already a restaurant with `restaurant.id`
       * @param restaurant
-      * @return
+      * @return The restaurant associated with the uuid before the update, if any.
       */
-    def updateOrCreateRestaurant(restaurant: Restaurant): Future[Unit]
+    def updateOrCreateRestaurant(restaurant: Restaurant): Future[Option[Restaurant]]
   }
-  
+
   class LevelDbRestaurantRepositoryComponent(db: DB)(implicit ec: ExecutionContext, s: Serialization[Restaurant]) extends RestaurantRepositoryComponent {
     import org.fusesource.leveldbjni.JniDBFactory.bytes
 
@@ -83,8 +83,13 @@ package object repositories {
         restaurant
       }
 
-    override def updateOrCreateRestaurant(restaurant: Restaurant): Future[Unit] = Future {
-      db.put(bytes(restaurant.id.toString), s.serialize(restaurant))
+    override def updateOrCreateRestaurant(restaurant: Restaurant): Future[Option[Restaurant]] = {
+      for {
+        restaurantOld <- getRestaurant(restaurant.id)
+        _ <- Future { db.put(bytes(restaurant.id.toString), s.serialize(restaurant)) }
+      } yield {
+        restaurantOld
+      }
     }
   }
 }

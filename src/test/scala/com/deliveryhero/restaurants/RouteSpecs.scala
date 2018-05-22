@@ -168,7 +168,7 @@ class RouteSpecs extends FlatSpec with Matchers with ScalatestRouteTest {
 
   it should "return with NoContent status code when restaurant was correctly updated or created" in {
     val mockedRepositoryComponent = mock(classOf[RestaurantRepositoryComponent])
-    when(mockedRepositoryComponent.updateOrCreateRestaurant(any())).thenReturn(Future.successful(()))
+    when(mockedRepositoryComponent.updateOrCreateRestaurant(any())).thenReturn(Future.successful(None))
     val uuid = UUID.randomUUID()
     val routeWithMockedReposityComponent = routeBuilder(mockedRepositoryComponent)
     val body =

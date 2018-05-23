@@ -32,3 +32,4 @@ libraryDependencies ++= Seq(
 enablePlugins(JavaAppPackaging)
 
 dockerExposedPorts := Seq(8080)
+dockerUsername := Some("kosii")

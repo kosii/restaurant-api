@@ -1,6 +1,6 @@
 # restaurant-api
 
-It's a little REST API to manage your favourite restaurants with the help of [akka-http]() and [levelDB](http://leveldb.org/).
+It's a little REST API to manage your favourite restaurants with the help of [akka-http](https://doc.akka.io/docs/akka-http/current/) and [levelDB](http://leveldb.org/).
 
 
 # Run

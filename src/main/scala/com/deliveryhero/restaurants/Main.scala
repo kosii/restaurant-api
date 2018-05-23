@@ -7,6 +7,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import com.deliveryhero.restaurants.repositories.LevelDbRestaurantRepositoryComponent
 import org.iq80.leveldb.Options
+import org.slf4j.LoggerFactory
 
 import scala.io.StdIn
 import scala.util.{Failure, Success}

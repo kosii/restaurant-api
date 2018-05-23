@@ -23,9 +23,9 @@ If you don't have sbt installed on your PC, it can be easier just to pull the pu
 
 ## Running the image
 
-The default way to run the image:
-    
-    docker run -p 8080:8080 restaurant-api:0.1
+The default way to run the image 
+
+    docker run -p 8080:8080 kosii/restaurant-api:0.1
     
 To change the port to expose the http service on your host please refer to the docker documentation.
 

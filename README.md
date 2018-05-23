@@ -55,7 +55,7 @@ Create a restaurant. The restaurant's id will be determined by the service. It'l
     
 # PUT /restaurants/\<uuid\>
 
-This request will create or update a restaurant with a given id. It's unnecessary to provide an id in the request's body, it's always the id in the url which will be taken in account.
+This request will create or update a restaurant with a given id. It's unnecessary to provide an id in the request's body, it's always the id in the url which will be taken in account. It'll return 204 if the restarant was correctly created or updated.
 
 ## Example
 

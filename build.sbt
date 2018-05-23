@@ -30,3 +30,5 @@ libraryDependencies ++= Seq(
 ).map(_ % circeVersion)
 
 enablePlugins(JavaAppPackaging)
+
+dockerExposedPorts += 8080
